@@ -1,0 +1,31 @@
+#!/bin/bash
+
+__gray="\033[1;30m"
+__orange="\033[1;33m"
+__reset="\033[0m"
+
+while true; do
+  json=$(cat ~/Library/Application\ Support/Google\ Play\ Music\ Desktop\ Player/json_store/playback.json);
+  status=$(jq -a --raw-output "if .playing then \"\u25B6 \" else \"||\" end" <<< $json);
+  played=$(jq .time.current <<< $json);
+  total=$(jq .time.total <<< $json);
+
+  if [ "$played" -a "$total" ]; then
+    percentage=$(expr $played \* 100 / $total);
+    echo -ne " $(jq --raw-output .song.title <<< $json) $__gray[$(jq --raw-output .song.artist <<< $json)]$__reset";
+    echo -ne "  $status";
+    echo -ne " [";
+
+    for i in {1..100}; do
+      if [ "$i" -lt "$percentage" ]; then
+        echo -ne "$__orange=";
+      elif [ "$i" -eq "$percentage" ]; then
+        echo -ne "${__orange}O";
+      else
+        echo -ne "$__reset-";
+      fi
+    done
+
+    echo -ne "]\r";
+  fi
+done
