@@ -7,16 +7,25 @@ __reset="\033[0m"
 while true; do
   json=$(cat ~/Library/Application\ Support/Google\ Play\ Music\ Desktop\ Player/json_store/playback.json);
   status=$(jq -a --raw-output "if .playing then \"\u25B6 \" else \"||\" end" <<< $json);
-  played=$(jq .time.current <<< $json);
+  elapsed=$(jq .time.current <<< $json);
   total=$(jq .time.total <<< $json);
 
-  if [ "$played" -a "$total" ]; then
-    percentage=$(expr $played \* 100 / $total);
-    echo -ne " $(jq --raw-output .song.title <<< $json) $__gray[$(jq --raw-output .song.artist <<< $json)]$__reset";
-    echo -ne "  $status";
-    echo -ne " [";
+  if [ "$elapsed" -a "$total" ]; then
+    song_title=$(jq --raw-output .song.title <<< $json);
+    song_artist=$(jq --raw-output .song.artist <<< $json);
 
-    for i in {1..100}; do
+    elapsed_min=`printf %02d $((($elapsed / (1000 * 60)) % 60))`;
+    elapsed_sec=`printf %02d $((($elapsed / 1000) % 60))`;
+    total_min=`printf %02d $((($total / (1000 * 60)) % 60))`;
+    total_sec=`printf %02d $((($total / 1000) % 60))`;
+    curtime="$elapsed_min:$elapsed_sec";
+
+    preamble="$song_title $__gray[$song_artist]$__reset  $status  $curtime [";
+    bar_l=$(($(tput cols) - $(wc -m <<< $preamble)));
+    percentage=$(expr $elapsed \* $bar_l / $total);
+    echo -ne " $preamble";
+
+    for i in $(seq 1 $bar_l); do
       if [ "$i" -lt "$percentage" ]; then
         echo -ne "$__orange=";
       elif [ "$i" -eq "$percentage" ]; then
@@ -26,6 +35,6 @@ while true; do
       fi
     done
 
-    echo -ne "]\r";
+    echo -ne "$__reset] $total_min:$total_sec\r";
   fi
 done
