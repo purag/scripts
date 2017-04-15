@@ -5,7 +5,14 @@ __orange="\033[1;33m"
 __reset="\033[0m"
 
 while true; do
-  json=$(cat ~/Library/Application\ Support/Google\ Play\ Music\ Desktop\ Player/json_store/playback.json);
+  path=
+  if [[ $(uname -s) = "Linux" ]]; then
+    path="~/.config"
+  else
+    path="~/Library/Application\ Support"
+  fi
+
+  json=$(cat $path/Google\ Play\ Music\ Desktop\ Player/json_store/playback.json);
   elapsed=$(jq .time.current <<< $json);
   total=$(jq .time.total <<< $json);
 
