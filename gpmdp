@@ -7,12 +7,15 @@ __reset="\033[0m"
 while true; do
   path=
   if [[ $(uname -s) = "Linux" ]]; then
-    path="~/.config"
+    path=~/.config/Google\ Play\ Music\ Desktop\ Player
+  elif [[ $(uname -s) = "Darwin" ]]; then
+    path=~/Library/Application\ Support/Google\ Play\ Music\ Desktop\ Player
   else
-    path="~/Library/Application\ Support"
+    :
+    # TODO: get %APPDATA% here for windows
   fi
 
-  json=$(cat $path/Google\ Play\ Music\ Desktop\ Player/json_store/playback.json);
+  json=$(cat "$path/json_store/playback.json" 2> /dev/null);
   elapsed=$(jq .time.current <<< $json);
   total=$(jq .time.total <<< $json);
 
@@ -33,9 +36,9 @@ while true; do
     echo -ne "$preamble";
 
     for i in $(seq 1 $bar_l); do
-      if [ "$i" -lt "$percentage" ]; then
+      if [[ "$i" -lt "$percentage" ]]; then
         echo -ne "$__orange=";
-      elif [ "$i" -eq "$percentage" ]; then
+      elif [[ "$i" -eq "$percentage" ]]; then
         echo -ne "${__orange}O";
       else
         echo -ne "$__reset-";
